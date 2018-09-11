@@ -24,18 +24,10 @@ class DynamicSoapClient extends SoapClient
     public function __construct($wsdl,$options,&$config)
     {
 		 parent::__construct($wsdl,$options);
-                 if ( array_key_exists('proxy_host', $config) && array_key_exists('proxy_port', $config)) {
-                         $config['stream_context'] = stream_context_create(
-                                 array(
-                                         'proxy' => "tcp://" . $config['proxy_host'] . ":" . $config['proxy_port'],
-                                         'request_fulluri' => true,
-                                 )
-                         );
+                 if ( ! array_key_exists('proxy_host', $config) || ! array_key_exists('proxy_port', $config)) {
+                         $proxyConfig = $this->getProxy();
+                         $config = array_merge($config, $proxyConfig);
                  }
-         else {
-                 $proxyConfig = $this->getProxy();
-                 $config = array_merge($config, $proxyConfig);
-         }
 
         $this->config = $config;
     }
