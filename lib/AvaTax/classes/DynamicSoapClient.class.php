@@ -27,7 +27,7 @@ class DynamicSoapClient extends SoapClient
                  if ( array_key_exists('proxy_host', $config) && array_key_exists('proxy_port', $config)) {
                          $config['stream_context'] = stream_context_create(
                                  array(
-                                         'proxy' => "tcp://".$config['proxy_host'].":". $config['proxy_port'],
+                                         'proxy' => "tcp://" . $config['proxy_host'] . ":" . $config['proxy_port'],
                                          'request_fulluri' => true,
                                  )
                          );
@@ -80,6 +80,9 @@ class DynamicSoapClient extends SoapClient
                             $proxyVar = $i;
                             break;
                     }
+                    else {
+                            return array();
+                    }
             $proxy = $_ENV[$proxyVar];
             $proxy_host = parse_url($proxy, PHP_URL_HOST);
             $proxy_port = parse_url($proxy, PHP_URL_PORT);
@@ -97,5 +100,6 @@ class DynamicSoapClient extends SoapClient
                     $proxyConfig;
 
     }
-
+    }
 }
+
