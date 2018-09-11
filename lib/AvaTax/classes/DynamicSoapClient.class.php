@@ -102,4 +102,3 @@ class DynamicSoapClient extends SoapClient
     }
     }
 }
-
