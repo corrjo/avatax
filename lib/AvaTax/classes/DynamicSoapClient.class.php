@@ -2,7 +2,7 @@
 /**
  * DynamicSoapClient.class.php
  */
- 
+
 /**
  * Private implementation class for all Avalara web service clients.
  *
@@ -12,19 +12,32 @@
  * @see AvalaraSoapClient
  * @see AddressServiceSoap
  * @see TaxServiceSoap
- *  
+ *
  * @author    Avalara
  * @copyright © 2004 - 2011 Avalara, Inc.  All rights reserved.
  * @package   Base
  */
- 
+
 class DynamicSoapClient extends SoapClient
 {
     private $config;
     public function __construct($wsdl,$options,&$config)
     {
 		 parent::__construct($wsdl,$options);
-        $this->config = $config; 
+                 if ( array_key_exists('proxy_host', $config) && array_key_exists('proxy_port', $config)) {
+                         $config['stream_context'] = stream_context_create(
+                                 array(
+                                         'proxy' => "tcp://".$config['proxy_host'].":". $config['proxy_port'],
+                                         'request_fulluri' => true,
+                                 )
+                         );
+                 }
+         else {
+                 $proxyConfig = $this->getProxy();
+                 $config = array_merge($config, $proxyConfig);
+         }
+
+        $this->config = $config;
     }
 
 	public function __call($n,$args)
@@ -34,10 +47,10 @@ class DynamicSoapClient extends SoapClient
         	$result = $this->__soapCall($n,$args,NULL,array($securityHeader,$profileHeader));
         return $result;
 	}
-    
+
     private function securityXML()
     {
-        return 
+        return
             '<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" SOAP-ENV:mustUnderstand="1">'.
                 '<wsse:UsernameToken>'.
                     '<wsse:Username>'.$this->config->account.'</wsse:Username>'.
@@ -46,10 +59,10 @@ class DynamicSoapClient extends SoapClient
                 '</wsse:UsernameToken>'.
             '</wsse:Security>';
     }
-    
+
     private function profileXML()
     {
-        return 
+        return
             '<Profile xmlns="http://avatax.avalara.com/services" SOAP-ENV:actor="http://schemas.xmlsoap.org/soap/actor/next" SOAP-ENV:mustUnderstand="0">'.
                 '<Name>'.$this->config->name.'</Name>'.
             	'<Client>'.$this->config->client.'</Client>'.
@@ -57,5 +70,26 @@ class DynamicSoapClient extends SoapClient
                 ($this->config->isLandedCostEnabled ? '<ClientSupportMultiTax>true</ClientSupportMultiTax>' : '').
             '</Profile>';
     }
-    
+
+    private function getProxy()
+    {
+
+            $proxy = $_ENV['HTTPS_PROXY'];
+            $proxy_host = parse_url($proxy, PHP_URL_HOST);
+            $proxy_port = parse_url($proxy, PHP_URL_PORT);
+            $proxyConfig = array(
+                    "proxy_host" => $proxy_host,
+                    "proxy_port" => $proxy_port,
+                    "stream_context" => stream_context_create(
+                            array(
+                                    'proxy' => "tcp://" . $proxy_host . ":" . $proxy_port,
+                                    'request_fulluri' => true,
+                            )
+                    )
+            );
+            return
+                    $proxyConfig;
+
+    }
+
 }
