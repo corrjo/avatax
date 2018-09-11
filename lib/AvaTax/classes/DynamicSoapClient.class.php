@@ -74,7 +74,13 @@ class DynamicSoapClient extends SoapClient
     private function getProxy()
     {
 
-            $proxy = $_ENV['HTTPS_PROXY'];
+            $proxyVars = array("https_proxy", "HTTPS_PROXY", "http_proxy", "HTTP_PROXY");
+            foreach ($proxyVars as $i){
+                    if (getenv($i) !== false){
+                            $proxyVar = $i;
+                            break;
+                    }
+            $proxy = $_ENV[$proxyVar];
             $proxy_host = parse_url($proxy, PHP_URL_HOST);
             $proxy_port = parse_url($proxy, PHP_URL_PORT);
             $proxyConfig = array(
